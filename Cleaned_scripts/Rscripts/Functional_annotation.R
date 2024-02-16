@@ -28,7 +28,7 @@ mergetable<-left_join(tablegene,Ssal_TFs,by=c("gene_id"))
 
 
 ##non coding RNAs
-ncrnatab<-read.table(file="/mnt/SCRATCH/cedi/phDSalmon/evolutionary_analysis/dnds/non_coding_rna_noheader.gff",sep="\t")
+ncrnatab<-read.table(file="non_coding_rna_noheader.gff",sep="\t") ##gff3 data only containing ncRNAs info
 ncrnatab<-ncrnatab[,-c(6:9)]
 colnames(ncrnatab)<-c("chrom","ensembl","type","start","end")
 
@@ -38,7 +38,7 @@ ncRNAtab<-ncrnatab[ncrnatab$type=="ncRNA",]
 
 #### Annotation of eQTLs
 
-rna_full_table<-read.table(file="rna_LL_all_august_version_01.txt",header=TRUE)
+rna_full_table<-read.table(file="rna_LL_all_august_version_01.txt",header=TRUE) ### data come from XXX
 
 ## set up a distance around the location of the annotation to consider the eQTL as "nearby this annotation"
 distTF<-20000
