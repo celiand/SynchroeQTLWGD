@@ -1,20 +1,19 @@
-### check overlap of eQTL with pauline's results
+### -- check overlap of eQTL with pauline's results -- ##
 
 ## first format xpehh data from pauline
 xpehhtab<-read.table(file="/mnt/SCRATCH/pabu/bedtools/input2/xp_ehh_euro.bed")
 colnames(xpehhtab)<-c("CHROM","POS","END")
 xpehhtab$CHROM<-ifelse(xpehhtab$CHROM<10,paste("ssa0",xpehhtab$CHROM,sep=""),paste("ssa",xpehhtab$CHROM,sep=""))
 
-## then format rna data // see script XXX to see where data comes from
-rna_full_table<-read.table(file="Synchro_uniq_fulltable_withinfo_04.txt",header=TRUE)
-rna_full_table<-rna_full_table[rna_full_table$condition=="LL",]
-rna_full_table$CHROM<-ifelse(rna_full_table$snpschrom<10,paste("ssa0",rna_full_table$snpschrom,sep=""),paste("ssa",rna_full_table$snpschrom,sep=""))
+## then format rna data // see script Region_shuffle_bootstrap.R
+rna_full_table<-read.table(file="rna_LL_all_august_version_01.txt",header=TRUE)
+rna_full_table$CHROM<-ifelse(rna_full_table$snpchrom<10,paste("ssa0",rna_full_table$snpchrom,sep=""),paste("ssa",rna_full_table$snpchrom,sep=""))
 
 ## then export data
 options("scipen"=100, "digits"=4) ##disable scientific notation for later exportation
 write.table(xpehhtab,file="xpehh_edit_pauline.bed",row.names = FALSE,col.names = FALSE,quote = FALSE,sep="\t")
 
-rna_full_table_bed<-data.frame(rna_full_table$CHROM,rna_full_table$snpstart,rna_full_table$snpstart)
+rna_full_table_bed<-data.frame(rna_full_table$CHROM,rna_full_table$snppos,rna_full_table$snppos)
 write.table(rna_full_table_bed,file="rna_eQTL.bed",row.names = FALSE,col.names = FALSE,quote = FALSE,sep="\t")
 
 
@@ -27,7 +26,7 @@ write.table(rna_full_table_bed,file="rna_eQTL.bed",row.names = FALSE,col.names =
 tab_intersect<-read.table(file="intersect_eQTL_xpehh.txt")
 
 tab_intersect$snpid<-paste(tab_intersect$V1,tab_intersect$V2,sep="_")
-rna_full_table$snpid<-paste(rna_full_table$CHROM,rna_full_table$snpstart,sep="_")
+rna_full_table$snpid<-paste(rna_full_table$CHROM,rna_full_table$snppos,sep="_")
 subsetrna<-rna_full_table[rna_full_table$snpid%in%tab_intersect$snpid,]
 
 

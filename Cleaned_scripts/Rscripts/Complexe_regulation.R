@@ -2,10 +2,10 @@
 ### 19/02/2024
 ### Investigation of regulation of complexes
 
-##### First make data for co regulation (this part is quite heavy so run it on cluster if possible) ####
+##### -- First make data for co regulation (this part is quite heavy so run it on cluster if possible) --  ####
 
 
-real_data<-read.table(file="/mnt/users/cedi/rna_LL_all_august_version_01.txt",header=TRUE) ## data from XXX
+real_data<-read.table(file="/mnt/users/cedi/rna_LL_all_august_version_01.txt",header=TRUE) ## data from Region_shuffle_bootstrap.R
 
 ## first import data
 file_path<-"/mnt/users/cedi/8030.protein.links.v12.0.txt.gz" ##data from string database
@@ -82,7 +82,7 @@ write.table(data2,"/mnt/users/cedi/coreg_data_filtered.txt",row.names=FALSE)
 write.table(data,"/mnt/users/cedi/coreg_data_full.txt",row.names=FALSE)
 
 
-##### Then make random expectations (again this part is quite heavy) #####
+##### -- Then make random expectations (again this part is quite heavy) -- #####
 
 
 #### make a data with no double (keep only one of P1 - P2 and P2 - P1)
@@ -214,7 +214,7 @@ for(i in 1:100){
 
 write.table(result_shuffle,file="/mnt/users/cedi/result_shuffle_prot_V3_100it.txt",row.names=FALSE)
 
-#### Then make analysis and figures
+#### -- Then make analysis and figures -- ####
 
 randomcoreg<-read.table(file="result_shuffle_prot_V3_100it.txt",header=TRUE)
 

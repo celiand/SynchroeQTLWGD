@@ -183,10 +183,16 @@ dfcount <- fulltab%>% filter(!is.na(duplicatestatus))  %>% filter(kind!="cis")  
 
 ggplot(dfcount,aes(x=data,y=prop,fill=duplicatestatus))+geom_bar(position = "fill", stat = "identity")+scale_fill_manual(values=c("#F3B5B3","#F5E69A","#B5AFDE","#B6D8B6"))+theme_bw(base_size = 30)+ylab("Proportion") +xlab("Data type")+guides(fill=guide_legend("Interaction type"))
 
-ggplot(dfcount,aes(x="",y=prop,fill=duplicatestatus))+geom_bar(stat="identity",width=1)+
+dfcountreal<-dfcount[dfcount$data=="real",]
+ggplot(dfcountreal,aes(x="",y=prop,fill=duplicatestatus))+geom_bar(stat="identity",width=1)+
   coord_polar("y",start=0)+theme_void()+scale_fill_manual(values=c("#F3B5B3","#F5E69A","#B5AFDE","#B6D8B6"))+
   theme(legend.text = element_text(size=15))
 
+##prop :
+## ICNO: 61
+## ICO : 2
+## ICNS : 20
+## ICS : 17
 
 df_wide <- pivot_wider(dfcount, id_cols = duplicatestatus, names_from = data, values_from = total_count)
 df_wide$enrichment<-df_wide$real/df_wide$shuffled
@@ -331,4 +337,4 @@ result <- test %>%
 library(ggplot2)
 
 ggplot(result,aes(x=duplicatestatus,y=mean_enrichment,fill=duplicatestatus))+geom_bar(stat="identity")+scale_fill_manual(values=c("#F3B5B3","#F5E69A","#B5AFDE","#B6D8B6"))+theme_bw(30)+geom_hline(yintercept=1,color="darkgrey",linetype = "dashed",size=4)+ scale_y_continuous(trans = "log2")+
-  xlab("Interaction type") +ylab("Log2 of enrichment")+geom_errorbar(aes(x=duplicatestatus, ymin = mean_enrichment - 1.96*se_enrichment, ymax = mean_enrichment + 1.96*se_enrichment), color = "black")#+theme(axis.text.x = element_text(angle = 45, hjust=1)) 
+  xlab("Interaction type") +ylab("Log2 of enrichment")+geom_errorbar(aes(x=duplicatestatus, ymin = mean_enrichment - 1.96*se_enrichment, ymax = mean_enrichment + 1.96*se_enrichment), color = "black")+theme(legend.position="none")#+theme(axis.text.x = element_text(angle = 45, hjust=1)) 

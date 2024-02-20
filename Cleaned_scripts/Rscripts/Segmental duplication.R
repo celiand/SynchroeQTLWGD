@@ -2,7 +2,10 @@
 ### 19/02/2024
 ### investigation of segmental duplication
 
-##get orthology data from Atlantic salmon
+
+### -- Find segmental duplication -- ###
+
+### get orthology data from Atlantic salmon 
 ortho_tab<-read.table(file="https://salmobase.org/datafiles/orthology/2021-11/Ortho_pipeline/OGtbl.tsv",header=TRUE)
 
 filteredtab<-ortho_tab[ortho_tab$spc=="Ssal",1:2]
@@ -106,11 +109,11 @@ for( i in unique(mergeddata3$OG_chrom)){
 length(unique(mergeddata3$OG_chrom))
 length(unique(mergeddata3$OG))
 
-###all genes that are part of a potential duplicate group
+###all genes that are part of a potential segmental duplicate group
 write.table(mergeddata3,file="potentialSD.txt",row.names=FALSE)
 
 
-#### Refine shared eQTL category (find if one of the eQTL regulation gene1 is also regulating gene2 but not lead eQTL)
+#### -- Refine shared eQTL category (find if one of the eQTL regulation gene1 is also regulating gene2 but not lead eQTL) -- ####
 
 transdata<-read.table(file="LLsmolt.trans.adjust.hits.txt",header=FALSE)
 
@@ -207,7 +210,7 @@ write.table(pairdata,file="refined_shared_eQTL_SD.txt",row.names = FALSE)
 ### number of genes and pair at each steps, and number of pairs with shared eQTL
 
 
-##summary:
+## -- Summary -- ##
 ##some pairs have DC patterns
 ## 196 gene with distinct eQTL --> 87 pairs with eQTL on the same chromosome --> 50 with shared eQTL
 

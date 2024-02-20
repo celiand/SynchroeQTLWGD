@@ -1,7 +1,7 @@
 ### Celian Diblasi
 ### Functional annotation of eQTL in non coding RNA and transcription factors
 
-### get TF and non coding RNA data
+### -- get TF and non coding RNA data -- ###
 
 
 library(tidyverse)
@@ -36,9 +36,9 @@ mirnatab<-ncrnatab[ncrnatab$type=="miRNA",]
 lncRNAtab<-ncrnatab[ncrnatab$type=="lnc_RNA",]
 ncRNAtab<-ncrnatab[ncrnatab$type=="ncRNA",]
 
-#### Annotation of eQTLs
+#### -- Annotation of eQTLs -- ####
 
-rna_full_table<-read.table(file="rna_LL_all_august_version_01.txt",header=TRUE) ### data come from XXX
+rna_full_table<-read.table(file="rna_LL_all_august_version_01.txt",header=TRUE) ### data come from Region_shuffle_bootstrap.R
 
 ## set up a distance around the location of the annotation to consider the eQTL as "nearby this annotation"
 distTF<-20000
@@ -108,7 +108,7 @@ tabannotation<-tabannotation[!dups,]
 write.table(tabannotation,file="tabannotation05.txt")
 
 
-#### Annotation of SNPs that are not eQTLs
+#### -- Annotation of SNPs that are not eQTLs -- ####
 
 ## set up a distance around the location of the annotation to consider the SNP as "nearby this annotation"
 distTF<-20000
@@ -178,7 +178,7 @@ write.table(tabannotation,file="tabannotation_noeqtl02.txt")
 
 
 
-### analyze the result (lead SNPs)
+### -- analyze the result (lead SNPs) -- ###
 
 eqtltab<-read.table("tabannotation05.txt",header=TRUE) ### import eQTL overlapping elements
 noneqtltab<-read.table("tabannotation_noeqtl02.txt",header=TRUE) ### import SNP with no connection overlapping elements
