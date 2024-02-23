@@ -101,7 +101,7 @@ Analyze_gene_pair<-function(ID,SNP,gene,table){
   scatterplot<-ggarrange(toplot, empty, scatter, rightplot, 
                          ncol=2, nrow=2, widths=c(4, 1), heights=c(1, 4))
   filename_scat<-paste("Scatter_plot_",gene,".pdf",sep="")
-  path="C:/Users/cedi/Downloads/Jupyte_R_not_working/"
+  path="mypath" ## indicate desired path
   ggsave(filename = filename_scat,plot=scatterplot,path=path)
   
   
@@ -127,7 +127,7 @@ Analyze_gene_pair<-function(ID,SNP,gene,table){
   
   boxplot<-ggplot(datasub,aes(x=as.factor(genotype),y=expression,fill=pair))+geom_boxplot()+theme_bw(25)+xlab("eQTL genotype")+scale_fill_manual(values=c("firebrick1","dodgerblue1","darkorchid1"))
   filename_box<-paste("Boxplot_",gene,".pdf",sep="")
-  path="C:/Users/cedi/Downloads/Jupyte_R_not_working/" ## indicate desired path
+  path="mypath" ## indicate desired path
   ggsave(filename = filename_box,plot=boxplot,path=path)
   
   
