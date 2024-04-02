@@ -1,5 +1,5 @@
 #### Celian Diblasi
-#### 20/02/2024
+#### 15/03/2024
 #### Investigate ohnlogs gene expression
 
 
@@ -10,25 +10,23 @@ data<-read.table(file="synchroLL_finemap.txt",header=TRUE)
 
 cisdata<-read.table(file="synchroLL_cis_finemap.txt",header=TRUE)
 
-all_data<-read.table(file="rna_LL_all_august_version_01.txt",header=TRUE) ## data from Region_shuffle_bootstrap.R
-
-all_cis<-all_data[all_data$kind=="cis",c(1,2,5)]
-all_cis$posterior_prob<-NA
-
-colnames(all_cis)[2]<-"SNP"
 data$kind<-"trans"
+cisdata$kind<-"cis"
 
-cistransdata<-rbind.data.frame(all_cis,data,stringsAsFactors = FALSE)
 
 cistransdata<-rbind.data.frame(cisdata,data,stringsAsFactors = FALSE)
 
-genetab<-read.table(file="ss4r_dups_and_singletons_ENSrapid_convPipeline.tsv",header=TRUE) ## data of ohnologs
+
+
+##function to find pair
+
+genetab<-read.table(file="ss4r_dups_and_singletons_ENSrapid_convPipeline.tsv",header=TRUE)
 genetab<-genetab[genetab$type=="ss4r",]
 genetab<-genetab[,-c(1,2,6)]
 
 
-getPairstatus<-function(threshold){
-  #data_subset<- cistransdata[is.na(cistransdata$posterior_prob) | cistransdata$posterior_prob >= threshold, ]
+getPairstatus2<-function(threshold){
+  
   data_subset<- cistransdata[cistransdata$posterior_prob >= threshold, ]
   for(y in 1:length(genetab$ID)){
     
@@ -72,18 +70,39 @@ getPairstatus<-function(threshold){
       reg<-"Distinct eQTL"
     }
     
+    ##select a random common SNP if shared
+    if(reg=="Shared eQTL"){
+      common_SNP<-sample(tabpair1[issamesnp=="yes","SNP"],1)
+    }else{
+      common_SNP<-NA
+    }
+    
+    
     genetab[y,"regulation"]<-reg
+    genetab[y,"Common_SNP"]<-common_SNP
   }
-  return(genetab$regulation)
+  
+  return(genetab)
 }
+
 
 for(y in seq(from=0,to=1,by=0.05)){
-  result<-getPairstatus(y)
-  namecol<-paste("regulation",y,sep="_")
-  genetab[,namecol]<-result
+  result<-getPairstatus2(y)
+  result_reg<-result$regulation
+  result_commonSNP<-result$Common_SNP
+  namecol_reg<-paste("regulation",y,sep="_")
+  namecol_SNP<-paste("Common_SNP",y,sep="_")
+  genetab[,namecol_reg]<-result_reg
+  genetab[,namecol_SNP]<-result_commonSNP
 }
 
-write.table(genetab,file="genetabgenepair04.txt",row.names=FALSE)
+write.table(genetab,file="genetabgenepair05.txt",row.names=FALSE)
+
+## make a smaller table to use with only regulation and common SNP 0
+
+genetabsub<-genetab[,c(1:5)]
+
+write.table(genetabsub,file="genetabgenepair05_0cutoff.txt",row.names=FALSE)
 
 ### Get gene expression for both copies -- ###
 
@@ -99,7 +118,7 @@ Expression[, 2:ncol(Expression)] <- t(apply(Expression[, 2:ncol(Expression)], 1,
 
 
 
-genepair<-read.table(file="genetabgenepair04.txt",header=TRUE)
+genepair<-read.table(file="genetabgenepair05.txt",header=TRUE)
 
 
 genepair1<-Expression[Expression$pid%in%genepair$gene1,]
@@ -173,7 +192,7 @@ result <- gene_pair_tab %>%
   group_by(ID) %>% 
   summarize(spearman_coeff = cor(Expression_gene1, Expression_gene2, method = "spearman"))
 
-genepair<-read.table(file="genetabgenepair04.txt",header=TRUE)
+genepair<-read.table(file="genetabgenepair05.txt",header=TRUE)
 
 
 results2<-left_join(result, genepair, by = c("ID"="ID"))
@@ -215,6 +234,47 @@ ggplot(dfcount2,aes(x="",y=prop,fill=regulation_0))+geom_bar(stat="identity",wid
 #No eQTL: 24%
 ## Single eQTL: 42%
 ## Shared eQTL: 5%
+
+
+##make a slightly different plot with top10% and top 25% information
+
+percent10<-round(0.1*length(results2$gene2))
+percent25<-round(0.25*length(results2$gene2))
+
+df_ordered <- results2[order(results2$spearman_coeff, decreasing = TRUE), ]
+
+df_extracted <- head(df_ordered, n = percent10)
+
+dfcounttop10 <- df_extracted %>% group_by(regulation_0) %>% 
+  summarise(total_count=n(),.groups = 'drop') %>%
+  as.data.frame()  %>% 
+  mutate(prop = total_count / sum(total_count))
+
+df_extracted2 <- head(df_ordered, n = percent25)
+
+dfcounttop25 <- df_extracted2 %>% group_by(regulation_0) %>% 
+  summarise(total_count=n(),.groups = 'drop') %>%
+  as.data.frame()  %>% 
+  mutate(prop = total_count / sum(total_count))
+
+dfcount2$data<-"all"
+dfcounttop10$data<-"Top 10%"
+dfcounttop25$data<-"Top 25%"
+
+catdfcount<-rbind.data.frame(dfcount2,dfcounttop10,dfcounttop25)
+
+
+# Define the desired order of levels
+desired_order2 <- c("Top 10%", "Top 25%", "all")
+
+# Convert regulation_0 to a factor with the desired order
+catdfcount$data <- factor(catdfcount$data, levels = desired_order2)
+
+
+ggplot(catdfcount,aes(x = data, y = prop, fill = regulation_0))+geom_bar(stat = "identity", position = "dodge") +
+  facet_grid(~regulation_0)+scale_fill_manual(values=c("#F9B27C","#99B8EA","#8CE86D","#D186D8"))+
+  theme_bw(25)+geom_text(aes(label = signif(total_count)), nudge_y = 0.01)+theme(axis.text.x = element_text(angle = 45, hjust=1))
+
 
 
 

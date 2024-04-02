@@ -1,5 +1,5 @@
 #### Celian Diblasi
-#### 20/02/2024
+#### 15/03/2024
 #### Investigate megative correlation ohnologs with a shared eQTL
 
 
@@ -57,109 +57,6 @@ longgene<-longgene[longgene$ID=="ENSSSAG00000058006_Ssal_ENSSSAG00000093636_Ssal
 ggplot(longgene,aes(x=as.factor(genotype),y=expression,fill=pair))+geom_boxplot()+theme_bw(25)+xlab("eQTL genotype")+scale_fill_manual(values=c("firebrick1","dodgerblue1","darkorchid1"))
 
 
-### check difference in expression between sum of copies for all genotypes
-
-
-
-
-
-### Make plot of expression for both copies for one gene (dot plot and density)
-
-## function to
-## do the scatter plot
-## do the boxplot
-## do the statistical test of comparison on sum of expression between pairs
-## table must have column ID, SNP, genotype, Expression_gene1, Expression_gene2, sumexpression, sex
-Analyze_gene_pair<-function(ID,SNP,gene,table){
-  library(ggplot2)
-  library(egg) 
-  
-  ##first do the scatter plot
-  subdata<-table[table$ID==ID & table$SNP==SNP,]
-  titlescatter<-paste("correlation for ",gene,sep="")
-  
-  toplot<-ggplot(subdata,aes(x=Expression_gene1,fill=as.factor(genotype)))+geom_density(alpha=0.5)+theme_bw(20)+theme(legend.position = "none")+ggtitle(titlescatter)+xlab("Expression copy 1")
-  rightplot<-ggplot(subdata,aes(x=Expression_gene2,fill=as.factor(genotype)))+geom_density(alpha=0.5)+theme_bw(20)+coord_flip()+xlab("Expression copy 2")
-  scatter<-ggplot(subdata,aes(x=Expression_gene1,y=Expression_gene2,color=as.factor(genotype)))+geom_point()+theme_bw(20)+theme(legend.position = "none")+xlab("Expression copy 1")+ylab("Expression copy 2")
-  empty <- ggplot() + 
-    geom_point(aes(1,1), colour="white") +
-    theme(                              
-      plot.background = element_blank(), 
-      panel.grid.major = element_blank(), 
-      panel.grid.minor = element_blank(), 
-      panel.border = element_blank(), 
-      panel.background = element_blank(),
-      axis.title.x = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.x = element_blank(),
-      axis.text.y = element_blank(),
-      axis.ticks = element_blank()
-    )
-  
-  
-  
-  scatterplot<-ggarrange(toplot, empty, scatter, rightplot, 
-                         ncol=2, nrow=2, widths=c(4, 1), heights=c(1, 4))
-  filename_scat<-paste("Scatter_plot_",gene,".pdf",sep="")
-  path="mypath" ## indicate desired path
-  ggsave(filename = filename_scat,plot=scatterplot,path=path)
-  
-  
-  ##then do the boxplot
-  
-  gene1<-table[,c("ID","id","gene1","Expression_gene1","SNP","genotype")]
-  gene2<-table[,c("ID","id","gene2","Expression_gene2","SNP","genotype")]
-  
-  sumgene<-data.frame(ID=table$ID,id=table$id,gene=table$ID,expression=table$sumexpression,SNP=table$SNP,genotype=table$genotype)
-  colnames(sumgene)<-c("ID","id","gene","expression","SNP","genotype")
-  sumgene$pair<-"Sum of copies"
-  
-  colnames(gene2)<-c("ID","id","gene","expression","SNP","genotype")
-  colnames(gene1)<-c("ID","id","gene","expression","SNP","genotype")
-  
-  gene1$pair<-"copy 1"
-  gene2$pair<-"copy 2"
-  
-  
-  longgene<-rbind.data.frame(gene1,gene2,sumgene,stringsAsFactors = FALSE)
-  
-  datasub<-longgene[longgene$ID==ID & longgene$SNP==SNP,]
-  
-  boxplot<-ggplot(datasub,aes(x=as.factor(genotype),y=expression,fill=pair))+geom_boxplot()+theme_bw(25)+xlab("eQTL genotype")+scale_fill_manual(values=c("firebrick1","dodgerblue1","darkorchid1"))
-  filename_box<-paste("Boxplot_",gene,".pdf",sep="")
-  path="mypath" ## indicate desired path
-  ggsave(filename = filename_box,plot=boxplot,path=path)
-  
-  
-  ##then do the test
-  
-  model <- aov(sumexpression ~ genotype, data = subdata)
-  return(model)
-}
-
-
-### then run the function
-
-fulltabneg<-read.table("expression_table_8negativepair.txt",header=TRUE) ### see end of this script on generation of this table
-colnames(fulltabneg)[26:27]<-c("Expression_gene1","Expression_gene2")
-fulltabneg<-fulltabneg[,-c(6:24)]
-
-fulltabneg<-read.table("expression_table_9negativepairdistinctshared.txt",header=TRUE)
-colnames(fulltabneg)[26:27]<-c("Expression_gene1","Expression_gene2")
-fulltabneg<-fulltabneg[,-c(6:24)]
-
-
-
-### with mfsd13al gene
-mfsd13al<-Analyze_gene_pair(ID="ENSSSAG00000001778_Ssal_ENSSSAG00000045167_Ssal",SNP="ssa14_51370830",gene="major facilitator superfamily domain containing 13a-like",table=fulltabneg)
-summary(mfsd13al)
-sumary_mfsd13al<-summary(mfsd13al)
-
-
-### adjust p-values
-pval<-c(sumary_mfsd13al[[1]]$`Pr(>F)`[1],summary_idh3b[[1]]$`Pr(>F)`[1],summary_mterf3[[1]]$`Pr(>F)`[1],summary_napepld[[1]]$`Pr(>F)`[1],summary_hacl1[[1]]$`Pr(>F)`[1],summary_LOC106570013[[1]]$`Pr(>F)`[1],summary_LOC106597139[[1]]$`Pr(>F)`[1],summary_cpm[[1]]$`Pr(>F)`[1])
-
-p.adjust(pval,method="bonferroni")
 
 ##### -- refine shared negative gene pair -- #####
 
@@ -364,6 +261,190 @@ GetOneeQTL<-function(table){
 }
 
 
+### check difference in expression between sum of copies for all genotypes
+
+### Make plot of expression for both copies for one gene (dot plot and density)
+
+## function to
+## do the scatter plot
+## do the boxplot
+## do the statistical test of comparison on sum of expression between pairs
+## table must have column ID, SNP, genotype, Expression_gene1, Expression_gene2, sumexpression, sex
+Analyze_gene_pair<-function(ID,SNP,gene,table){
+  library(ggplot2)
+  library(egg) 
+  
+  ##first do the scatter plot
+  subdata<-table[table$ID==ID & table$SNP==SNP,]
+  titlescatter<-paste("correlation for ",gene,sep="")
+  
+  toplot<-ggplot(subdata,aes(x=Expression_gene1,fill=as.factor(genotype)))+geom_density(alpha=0.5)+theme_bw(20)+theme(legend.position = "none")+ggtitle(titlescatter)+xlab("Expression copy 1")
+  rightplot<-ggplot(subdata,aes(x=Expression_gene2,fill=as.factor(genotype)))+geom_density(alpha=0.5)+theme_bw(20)+coord_flip()+xlab("Expression copy 2")
+  scatter<-ggplot(subdata,aes(x=Expression_gene1,y=Expression_gene2,color=as.factor(genotype)))+geom_point()+theme_bw(20)+theme(legend.position = "none")+xlab("Expression copy 1")+ylab("Expression copy 2")
+  empty <- ggplot() + 
+    geom_point(aes(1,1), colour="white") +
+    theme(                              
+      plot.background = element_blank(), 
+      panel.grid.major = element_blank(), 
+      panel.grid.minor = element_blank(), 
+      panel.border = element_blank(), 
+      panel.background = element_blank(),
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      axis.text.x = element_blank(),
+      axis.text.y = element_blank(),
+      axis.ticks = element_blank()
+    )
+  
+  
+  
+  scatterplot<-ggarrange(toplot, empty, scatter, rightplot, 
+                         ncol=2, nrow=2, widths=c(4, 1), heights=c(1, 4))
+  filename_scat<-paste("Scatter_plot_",gene,".pdf",sep="")
+  path="/mnt/users/cedi/"
+  ggsave(filename = filename_scat,plot=scatterplot,path=path)
+  
+  
+  ##then do the boxplot
+  
+  gene1<-table[,c("ID","id","gene1","Expression_gene1","SNP","genotype")]
+  gene2<-table[,c("ID","id","gene2","Expression_gene2","SNP","genotype")]
+  
+  sumgene<-data.frame(ID=table$ID,id=table$id,gene=table$ID,expression=table$sumexpression,SNP=table$SNP,genotype=table$genotype)
+  colnames(sumgene)<-c("ID","id","gene","expression","SNP","genotype")
+  sumgene$pair<-"Sum of copies"
+  
+  colnames(gene2)<-c("ID","id","gene","expression","SNP","genotype")
+  colnames(gene1)<-c("ID","id","gene","expression","SNP","genotype")
+  
+  gene1$pair<-"copy 1"
+  gene2$pair<-"copy 2"
+  
+  
+  longgene<-rbind.data.frame(gene1,gene2,sumgene,stringsAsFactors = FALSE)
+  
+  datasub<-longgene[longgene$ID==ID & longgene$SNP==SNP,]
+  
+  boxplot<-ggplot(datasub,aes(x=as.factor(genotype),y=expression,fill=pair))+geom_boxplot()+theme_bw(25)+xlab("eQTL genotype")+scale_fill_manual(values=c("firebrick1","dodgerblue1","darkorchid1"))
+  filename_box<-paste("Boxplot_",gene,".pdf",sep="")
+  path="/mnt/users/cedi/"
+  ggsave(filename = filename_box,plot=boxplot,path=path)
+  
+  
+  ##then do the test
+  
+  model <- aov(sumexpression ~ genotype, data = subdata)
+  return(model)
+}
+
+
+sharedpair<-negativedata[,c(1,3,4,6)]
+colnames(sharedpair)[4]<-"snpid"
+
+distinctpair<-negativedistinctshared[,c(1,3,4,27)]
+colnames(distinctpair)[4]<-"snpid"
+
+negativedatasubset<-rbind.data.frame(sharedpair,distinctpair,stringsAsFactors = FALSE)
+
+tableexpression<-Get_SNP_gene_info(negativedatasubset,feature="pair")
+
+tableexpressionsub<-tableexpression[,c(1:6,47:51)]
+
+tableexpressionsub$sumexpression<-tableexpressionsub$expression.x+tableexpressionsub$expression.y
+
+gene1<-tableexpressionsub[,c(1,2,3,7,9,10)]
+gene2<-tableexpressionsub[,c(1,2,4,8,9,10)]
+
+sumgene<-data.frame(ID=tableexpressionsub$ID,id=tableexpressionsub$id,gene=tableexpressionsub$ID,expression=tableexpressionsub$sumexpression,SNP=tableexpressionsub$SNP,genotype=tableexpressionsub$genotype)
+colnames(sumgene)<-c("ID","id","gene","expression","SNP","genotype")
+sumgene$pair<-"Sum of copies"
+
+colnames(gene2)<-c("ID","id","gene","expression","SNP","genotype")
+colnames(gene1)<-c("ID","id","gene","expression","SNP","genotype")
+
+gene1$pair<-"copy 1"
+gene2$pair<-"copy 2"
+
+write.table(tableexpressionsub,"expression_table_18_negativesharedpair.txt",row.names = FALSE)
+
+
+longgene<-rbind.data.frame(gene1,gene2,sumgene,stringsAsFactors = FALSE)
+
+ggplot(longgene,aes(x=as.factor(genotype),y=expression,fill=pair))+geom_boxplot()+theme_bw(25)+xlab("eQTL genotype")+scale_fill_manual(values=c("firebrick1","dodgerblue1","darkorchid1"))+facet_wrap(~ID,scales = "free_y")
+
+unique(longgene$ID)
+
+longgene<-longgene[longgene$ID=="ENSSSAG00000009565_Ssal_ENSSSAG00000121915_Ssal",]
+ggplot(longgene,aes(x=as.factor(genotype),y=expression,fill=pair))+geom_boxplot()+theme_bw(25)+xlab("eQTL genotype")+scale_fill_manual(values=c("firebrick1","dodgerblue1","darkorchid1"))
+
+
+all_pairs<-read.table(file="expression_table_18_negativesharedpair.txt",header=TRUE)
+
+colnames(all_pairs)[7]<-"Expression_gene1"
+colnames(all_pairs)[8]<-"Expression_gene2"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000001739_Ssal_ENSSSAG00000041942_Ssal","Gene_name"]<-"zgc_112148"
+all_pairs[all_pairs$ID=="ENSSSAG00000001739_Ssal_ENSSSAG00000041942_Ssal","Gene_code"]<-"zgc"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000001778_Ssal_ENSSSAG00000045167_Ssal","Gene_name"]<-"major facilitator superfamily domain containing 13a-like"
+all_pairs[all_pairs$ID=="ENSSSAG00000001778_Ssal_ENSSSAG00000045167_Ssal","Gene_code"]<-"mfsd13al"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000002173_Ssal_ENSSSAG00000114008_Ssal","Gene_name"]<-"STT3 oligosaccharyltransferase complex catalytic subunit B"
+all_pairs[all_pairs$ID=="ENSSSAG00000002173_Ssal_ENSSSAG00000114008_Ssal","Gene_code"]<-"stt3b"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000009565_Ssal_ENSSSAG00000121915_Ssal","Gene_name"]<-"Src kinase associated phosphoprotein 2"
+all_pairs[all_pairs$ID=="ENSSSAG00000009565_Ssal_ENSSSAG00000121915_Ssal","Gene_code"]<-"skap2"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000011938_Ssal_ENSSSAG00000108018_Ssal","Gene_name"]<-"collectin-10-like"
+all_pairs[all_pairs$ID=="ENSSSAG00000011938_Ssal_ENSSSAG00000108018_Ssal","Gene_code"]<-"LOC106596782"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000036507_Ssal_ENSSSAG00000116949_Ssal","Gene_name"]<-"secretagogin"
+all_pairs[all_pairs$ID=="ENSSSAG00000036507_Ssal_ENSSSAG00000116949_Ssal","Gene_code"]<-"segn"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000043068_Ssal_ENSSSAG00000054986_Ssal","Gene_name"]<-"isocitrate dehydrogenase 3 non-catalytic subunit beta"
+all_pairs[all_pairs$ID=="ENSSSAG00000043068_Ssal_ENSSSAG00000054986_Ssal","Gene_code"]<-"idh3b"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000044129_Ssal_ENSSSAG00000117896_Ssal","Gene_name"]<-"ELOVL fatty acid elongase 8b"
+all_pairs[all_pairs$ID=="ENSSSAG00000044129_Ssal_ENSSSAG00000117896_Ssal","Gene_code"]<-"elovl8a"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000047981_Ssal_ENSSSAG00000057888_Ssal","Gene_name"]<-"mitochondrial transcription termination factor 3"
+all_pairs[all_pairs$ID=="ENSSSAG00000047981_Ssal_ENSSSAG00000057888_Ssal","Gene_code"]<-"mterf3"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000054393_Ssal_ENSSSAG00000117250_Ssal","Gene_name"]<-"N-acyl phosphatidylethanolamine phospholipase D"
+all_pairs[all_pairs$ID=="ENSSSAG00000054393_Ssal_ENSSSAG00000117250_Ssal","Gene_code"]<-"napepld"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000058006_Ssal_ENSSSAG00000093636_Ssal","Gene_name"]<-"2-hydroxyacyl-CoA lyase 1"
+all_pairs[all_pairs$ID=="ENSSSAG00000058006_Ssal_ENSSSAG00000093636_Ssal","Gene_code"]<-"hacl1"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000066297_Ssal_ENSSSAG00000078929_Ssal","Gene_name"]<-"E3 ubiquitin-protein ligase RNF19B-like"
+all_pairs[all_pairs$ID=="ENSSSAG00000066297_Ssal_ENSSSAG00000078929_Ssal","Gene_code"]<-"LOC106570013"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000083156_Ssal_ENSSSAG00000116300_Ssal","Gene_name"]<-"Ribosome binding factor A"
+all_pairs[all_pairs$ID=="ENSSSAG00000083156_Ssal_ENSSSAG00000116300_Ssal","Gene_code"]<-"rbfa"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000086178_Ssal_ENSSSAG00000087231_Ssal","Gene_name"]<-"tetraspanin-8-like"
+all_pairs[all_pairs$ID=="ENSSSAG00000086178_Ssal_ENSSSAG00000087231_Ssal","Gene_code"]<-"LOC106597139"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000090152_Ssal_ENSSSAG00000110471_Ssal","Gene_name"]<-"CC068 protein"
+all_pairs[all_pairs$ID=="ENSSSAG00000090152_Ssal_ENSSSAG00000110471_Ssal","Gene_code"]<-"cc068"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000091200_Ssal_ENSSSAG00000121190_Ssal","Gene_name"]<-"Protein associated with LIN7 2, MAGUK p55 family member"
+all_pairs[all_pairs$ID=="ENSSSAG00000091200_Ssal_ENSSSAG00000121190_Ssal","Gene_code"]<-"PALS2"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000092357_Ssal_ENSSSAG00000109189_Ssal","Gene_name"]<-"carboxypeptidase M"
+all_pairs[all_pairs$ID=="ENSSSAG00000092357_Ssal_ENSSSAG00000109189_Ssal","Gene_code"]<-"cpm"
+
+all_pairs[all_pairs$ID=="ENSSSAG00000113858_Ssal_ENSSSAG00000120807_Ssal","Gene_name"]<-"Eukaryotic translation initiation factor 3, subunit M"
+all_pairs[all_pairs$ID=="ENSSSAG00000113858_Ssal_ENSSSAG00000120807_Ssal","Gene_code"]<-"eif3m"
+
+pval<-c()
+for( i in unique(all_pairs$ID)){
+  dataanalyzed<-Analyze_gene_pair(ID=i,SNP=unique(all_pairs[all_pairs$ID==i,"SNP"]),gene=unique(all_pairs[all_pairs$ID==i,"Gene_name"]),table=all_pairs)
+  summary_data<-summary(dataanalyzed)
+  pval<-c(pval,summary_data[[1]]$`Pr(>F)`[1])
+}
+
+p.adjust(pval,method="bonferroni")
 
 
 
